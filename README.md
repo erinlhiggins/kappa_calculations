@@ -19,12 +19,13 @@ Plotting both over time, alongside team meetings, shows how reviewer agreement d
 
 1. [Files](#1-files)
 2. [Steps](#2-steps)
-3. [The formula](#3-the-formula)
-4. [Worked example](#4-worked-example)
-5. [Choosing the rolling window](#5-choosing-the-rolling-window)
-6. [Reading the plot](#6-reading-the-plot)
-7. [Running the code](#7-running-the-code)
-8. [Citation](#8-citation)
+3. [If your screening tool does not record dates](#3-if-your-screening-tool-does-not-record-dates)
+4. [The formula](#4-the-formula)
+5. [Worked example](#5-worked-example)
+6. [Choosing the rolling window](#6-choosing-the-rolling-window)
+7. [Reading the plot](#7-reading-the-plot)
+8. [Running the code](#8-running-the-code)
+9. [Citation](#9-citation)
 
 ---
 
@@ -41,11 +42,11 @@ Plotting both over time, alongside team meetings, shows how reviewer agreement d
 
 ## 2. Steps
 
-1. **Export screening decisions.** One row per decision, with the article ID, reviewer ID, decision (include or exclude), and the date and time it was recorded.
+1. **Export screening decisions.** One row per decision, with the article ID, reviewer ID, decision (include or exclude), and the date and time it was recorded. If your screening tool does not record dates, see [Section 3](#3-if-your-screening-tool-does-not-record-dates).
 2. **Keep double-screened articles.** Agreement can only be measured on articles screened by at least two reviewers.
 3. **Select the decisions for each day.** For cumulative kappa, use every decision recorded up to that day. For rolling kappa, use only decisions recorded in the preceding 30 days; an article counts only if at least two of its decisions fall within that window.
 4. **Count the votes** for include and exclude on each article.
-5. **Calculate Fleiss' kappa** using the formula in [Section 3](#3-the-formula).
+5. **Calculate Fleiss' kappa** using the formula in [Section 4](#4-the-formula).
 6. **Apply a minimum.** Leave rolling kappa blank on any day whose window holds fewer than 50 double-screened articles.
 7. **Plot and annotate** both lines over time with meeting dates, criteria changes, and screening volume.
 
@@ -53,7 +54,20 @@ Plotting both over time, alongside team meetings, shows how reviewer agreement d
 
 ---
 
-## 3. The formula
+## 3. If your screening tool does not record dates
+
+Rolling kappa needs to know when each decision was made. Some screening platforms record a timestamp for every decision (Sysrev does); others do not, and some export only the final decision for each article rather than each reviewer's decision. Check your tool's export options before screening begins. If your tool cannot export individual reviewers' decisions, rolling kappa cannot be calculated from its exports. If it exports individual decisions without dates, two workarounds can supply them:
+
+- **Record a date with each decision.** If your tool allows a custom field, tag, or note on each screening decision and includes it in the export, ask reviewers to enter the date with every decision. Making the field required avoids gaps.
+- **Date decisions by export.** Export all individual decisions at regular intervals, for example weekly before each team meeting. Give each decision that appears for the first time the date of that export, matching decisions across exports by article ID and reviewer ID. Keep every export file.
+
+Dating by export is coarser than a timestamp, but because reviewers typically screen in large batches, it changes the results little. In our project, re-dating every decision to the following Friday, as if decisions had been exported weekly, left cumulative kappa unchanged on each export day and changed rolling kappa by 0.007 on average (maximum 0.028). The dip in agreement over the December break remained visible. More frequent exports give finer detail.
+
+Whichever workaround you use, put the date in the `created_at` column (see [Section 8](#8-running-the-code)), for example `2025-10-31 23:59:00+00:00`.
+
+---
+
+## 4. The formula
 
 For article $i$ screened by $n_i$ reviewers, of whom $n_{ij}$ chose category $j$ (include or exclude), across $N$ articles:
 
@@ -73,7 +87,7 @@ In plain terms:
 
 ---
 
-## 4. Worked example
+## 5. Worked example
 
 Ten articles are each screened by two reviewers:
 
@@ -91,7 +105,7 @@ Raw agreement of 80% appears high, but because most articles are excluded, two r
 
 ---
 
-## 5. Choosing the rolling window
+## 6. Choosing the rolling window
 
 A shorter window shows change quickly but fluctuates more, because each window holds fewer articles. A longer window is smoother but slower to show that something has changed. Size the window by the number of double-screened articles it holds, not only by days. In the example above, with chance agreement near 0.58, one additional disagreement among 50 articles moves kappa by about 0.05, so windows much smaller than 50 articles swing widely.
 
@@ -99,7 +113,7 @@ In our project, a 30-day window spanned about four weekly meetings and typically
 
 ---
 
-## 6. Reading the plot
+## 7. Reading the plot
 
 | Line | What it shows |
 | --- | --- |
@@ -117,7 +131,7 @@ Kappa is often described using benchmark bands, such as Landis and Koch (1977) o
 
 ---
 
-## 7. Running the code
+## 8. Running the code
 
 ### Install
 
@@ -162,8 +176,8 @@ It saves `dynamic_rolling_kappa.png` and `dynamic_rolling_data.csv` in the same 
    | --- | --- | --- | --- |
    | Input file | 7 | `'user-answers.csv'` | Your CSV's file name |
    | Meeting dates | 16–24 | Our meetings | Your meeting dates, as `'YYYY-MM-DD'` |
-   | Minimum articles per window | 70 | `50` | See [Section 5](#5-choosing-the-rolling-window) |
-   | Window length | 74 | `days=30` | See [Section 5](#5-choosing-the-rolling-window); also update the legend label on line 100 |
+   | Minimum articles per window | 70 | `50` | See [Section 6](#6-choosing-the-rolling-window) |
+   | Window length | 74 | `days=30` | See [Section 6](#6-choosing-the-rolling-window); also update the legend label on line 100 |
    | Y-axis range | 106 | `0.6` to `0.9` | Widen it (e.g. `-0.2, 1.0`) if your kappa falls outside this range, or values will be hidden |
 
 3. **Run** `python codecalc.py`.
@@ -183,7 +197,7 @@ It saves `dynamic_rolling_kappa.png` and `dynamic_rolling_data.csv` in the same 
 
 ---
 
-## 8. Citation
+## 9. Citation
 
 If you use this code, please cite the paper above and this repository.
 
