@@ -54,9 +54,9 @@ Plotting both over time, alongside team meetings, shows how reviewer agreement d
 
 ---
 
-## 3. If your screening tool does not record dates
+## 3. If your screening tool does not record dates or individual article include/exclude decision per reviewer
 
-Rolling kappa needs to know when each decision was made. Some screening platforms record a timestamp for every decision (Sysrev does); others do not, and some export only the final decision for each article rather than each reviewer's decision. Check your tool's export options before screening begins. If your tool cannot export individual reviewers' decisions, rolling kappa cannot be calculated from its exports. If it exports individual decisions without dates, two workarounds can supply them:
+Rolling kappa needs to know when each decision was made. Some screening platforms record a timestamp for every decision (Sysrev does); others do not, and some export only the final decision for each article rather than each reviewer's decision. Check your tool's export options before screening begins. If your tool exports individual decisions without dates, two workarounds can supply them. If it cannot export individual decisions at all, see the [Covidence example](#example-covidence-summary-counts-only) below.
 
 - **Record a date with each decision.** If your tool allows a custom field, tag, or note on each screening decision and includes it in the export, ask reviewers to enter the date with every decision. Making the field required avoids gaps.
 - **Date decisions by export.** Export all individual decisions at regular intervals, for example weekly before each team meeting. Give each decision that appears for the first time the date of that export, matching decisions across exports by article ID and reviewer ID. Keep every export file.
@@ -64,6 +64,33 @@ Rolling kappa needs to know when each decision was made. Some screening platform
 Dating by export is coarser than a timestamp, but because reviewers typically screen in large batches, it changes the results little. In our project, re-dating every decision to the following Friday, as if decisions had been exported weekly, left cumulative kappa unchanged on each export day and changed rolling kappa by 0.007 on average (maximum 0.028). The dip in agreement over the December break remained visible. More frequent exports give finer detail.
 
 Whichever workaround you use, put the date in the `created_at` column (see [Section 8](#8-running-the-code)), for example `2025-10-31 23:59:00+00:00`.
+
+### Example: Covidence (summary counts only)
+
+At the time of writing, Covidence does not let reviewers see or export each other's individual decisions; it reports agreement only as a reviewer-by-reviewer summary. Agreement can still be tracked over time, because with two reviewers per article, Fleiss' kappa depends on only three counts: articles both reviewers included ($Y$), articles both excluded ($X$), and articles in conflict ($D$). Covidence counts "Maybe" votes as "Yes" at this stage, so they fall in $Y$ or $D$. This approach uses a spreadsheet rather than `codecalc.py`.
+
+1. **Take two snapshots at each team meeting.** Just before resolving conflicts, record the date and three numbers from your review: studies in *Full text review*, studies in *Irrelevant*, and conflicts waiting to be resolved. Record the same three numbers again just after resolving conflicts. The "after" snapshot is the baseline for the next meeting, because resolved conflicts move into the other two lists.
+2. **Work out the counts for each period.** Subtract the previous meeting's "after" numbers from this meeting's "before" numbers: $Y$ is the increase in Full text review, $X$ the increase in Irrelevant, and $D$ the increase in conflicts.
+3. **Calculate kappa** in a spreadsheet, with $N = Y + X + D$:
+
+   $$\bar{P} = \frac{Y + X}{N} \qquad p_{\text{include}} = \frac{2Y + D}{2N} \qquad P_e = p_{\text{include}}^2 + (1 - p_{\text{include}})^2 \qquad \kappa = \frac{\bar{P} - P_e}{1 - P_e}$$
+
+4. **Build the two lines.** For rolling kappa, add up $Y$, $X$ and $D$ over the last four weekly periods (about 30 days) before calculating, and skip any window with $N < 50$. For cumulative kappa, add up all periods to date.
+
+For example:
+
+| | Full text review | Irrelevant | Conflicts |
+| --- | :---: | :---: | :---: |
+| October 10, after resolving | 50 | 180 | 0 |
+| October 17, before resolving | 80 | 290 | 20 |
+| **Period counts** | $Y = 30$ | $X = 110$ | $D = 20$ |
+
+Here $N = 160$, $\bar{P} = 140/160 = 0.875$, $p_{\text{include}} = (60 + 20)/320 = 0.25$, $P_e = 0.25^2 + 0.75^2 = 0.625$, and $\kappa = (0.875 - 0.625)/(1 - 0.625) \approx 0.67$. This gives the same kappa as calculating from individual decisions; only the dates are coarser.
+
+Two cautions:
+
+- If full-text screening starts before title and abstract screening ends, add studies that have already left Full text review (to Included or Excluded) back into its count.
+- The method assumes exactly two reviewers per article, which is Covidence's default.
 
 ---
 
